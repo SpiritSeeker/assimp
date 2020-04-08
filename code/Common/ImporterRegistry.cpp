@@ -49,6 +49,8 @@ corresponding preprocessor flag to selectively disable formats.
 #include <vector>
 #include <assimp/BaseImporter.h>
 
+#define ASSIMP_BUILD_NO_C4D_IMPORTER
+
 // ------------------------------------------------------------------------------------------------
 // Importers
 // (include_new_importers_here)

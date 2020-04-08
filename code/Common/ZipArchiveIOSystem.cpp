@@ -54,7 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef ASSIMP_USE_HUNTER
 #    include <minizip/unzip.h>
 #else
-#    include <unzip.h>
+#    include <unzip/unzip.h>
 #endif
 
 namespace Assimp {
@@ -332,7 +332,7 @@ ZipArchiveIOSystem::Implement::Implement(IOSystem *pIOHandler, const char *pFile
     if (pFilename[0] == 0 || nullptr == pMode) {
         return;
     }
-    
+
     zlib_filefunc_def mapping = IOSystem2Unzip::get(pIOHandler);
     m_ZipFileHandle = unzOpen2(pFilename, &mapping);
 }
