@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -98,6 +98,12 @@ TEST(utACImportExport, importSphereWithLightUvScaling4X) {
 TEST(utACImportExport, importWuson) {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/AC/Wuson.ac", aiProcess_ValidateDataStructure);
+    ASSERT_NE(nullptr, scene);
+}
+
+TEST(utACImportExport, importWusonACC) {
+    Assimp::Importer importer;
+    const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/AC/Wuson.acc", aiProcess_ValidateDataStructure);
     ASSERT_NE(nullptr, scene);
 }
 

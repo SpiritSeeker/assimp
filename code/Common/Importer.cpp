@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -78,6 +78,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/Profiler.h>
 #include <assimp/commonMetaData.h>
 
+#include <exception>
 #include <set>
 #include <memory>
 #include <cctype>
@@ -148,7 +149,7 @@ void AllocateFromAssimpHeap::operator delete[] ( void* data)    {
 Importer::Importer()
  : pimpl( new ImporterPimpl ) {
     pimpl->mScene = nullptr;
-    pimpl->mErrorString = "";
+    pimpl->mErrorString = std::string();
 
     // Allocate a default IO handler
     pimpl->mIOHandler = new DefaultIOSystem;
@@ -231,7 +232,7 @@ aiReturn Importer::RegisterLoader(BaseImporter* pImp) {
 
 #ifdef ASSIMP_BUILD_DEBUG
         if (IsExtensionSupported(*it)) {
-            ASSIMP_LOG_WARN_F("The file extension ", *it, " is already in use");
+            ASSIMP_LOG_WARN("The file extension ", *it, " is already in use");
         }
 #endif
         baked += *it;
@@ -239,7 +240,7 @@ aiReturn Importer::RegisterLoader(BaseImporter* pImp) {
 
     // add the loader
     pimpl->mImporter.push_back(pImp);
-    ASSIMP_LOG_INFO_F("Registering custom importer for these file extensions: ", baked);
+    ASSIMP_LOG_INFO("Registering custom importer for these file extensions: ", baked);
     ASSIMP_END_EXCEPTION_REGION(aiReturn);
     
     return AI_SUCCESS;
@@ -249,7 +250,7 @@ aiReturn Importer::RegisterLoader(BaseImporter* pImp) {
 // Unregister a custom loader plugin
 aiReturn Importer::UnregisterLoader(BaseImporter* pImp) {
     if(!pImp) {
-        // unregistering a NULL importer is no problem for us ... really!
+        // unregistering a nullptr importer is no problem for us ... really!
         return AI_SUCCESS;
     }
 
@@ -272,7 +273,7 @@ aiReturn Importer::UnregisterLoader(BaseImporter* pImp) {
 // Unregister a custom loader plugin
 aiReturn Importer::UnregisterPPStep(BaseProcess* pImp) {
     if(!pImp) {
-        // unregistering a NULL ppstep is no problem for us ... really!
+        // unregistering a nullptr ppstep is no problem for us ... really!
         return AI_SUCCESS;
     }
 
@@ -386,7 +387,8 @@ void Importer::FreeScene( ) {
     delete pimpl->mScene;
     pimpl->mScene = nullptr;
 
-    pimpl->mErrorString = "";
+    pimpl->mErrorString = std::string();
+    pimpl->mException = std::exception_ptr();
     ASSIMP_END_EXCEPTION_REGION(void);
 }
 
@@ -397,6 +399,13 @@ const char* Importer::GetErrorString() const {
     
     // Must remain valid as long as ReadFile() or FreeFile() are not called
     return pimpl->mErrorString.c_str();
+}
+
+const std::exception_ptr& Importer::GetException() const {
+    ai_assert(nullptr != pimpl);
+    
+    // Must remain valid as long as ReadFile() or FreeFile() are not called
+    return pimpl->mException;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -425,7 +434,8 @@ aiScene* Importer::GetOrphanedScene() {
     ASSIMP_BEGIN_EXCEPTION_REGION();
     pimpl->mScene = nullptr;
 
-    pimpl->mErrorString = ""; // reset error string
+    pimpl->mErrorString = std::string();
+    pimpl->mException = std::exception_ptr();
     ASSIMP_END_EXCEPTION_REGION(aiScene*);
     
     return s;
@@ -502,59 +512,68 @@ const aiScene* Importer::ReadFileFromMemory( const void* pBuffer,
     ReadFile(fbuff,pFlags);
     SetIOHandler(io);
 
-    ASSIMP_END_EXCEPTION_REGION_WITH_ERROR_STRING(const aiScene*, pimpl->mErrorString);
+    ASSIMP_END_EXCEPTION_REGION_WITH_ERROR_STRING(const aiScene*, pimpl->mErrorString, pimpl->mException);
     return pimpl->mScene;
 }
 
 // ------------------------------------------------------------------------------------------------
 void WriteLogOpening(const std::string& file) {
     
-    ASSIMP_LOG_INFO_F("Load ", file);
+    ASSIMP_LOG_INFO("Load ", file);
 
     // print a full version dump. This is nice because we don't
     // need to ask the authors of incoming bug reports for
     // the library version they're using - a log dump is
     // sufficient.
-    const unsigned int flags( aiGetCompileFlags() );
+    const unsigned int flags = aiGetCompileFlags();
     std::stringstream stream;
     stream << "Assimp " << aiGetVersionMajor() << "." << aiGetVersionMinor() << "." << aiGetVersionRevision() << " "
 #if defined(ASSIMP_BUILD_ARCHITECTURE)
-        << ASSIMP_BUILD_ARCHITECTURE
+           << ASSIMP_BUILD_ARCHITECTURE
 #elif defined(_M_IX86) || defined(__x86_32__) || defined(__i386__)
-        << "x86"
+           << "x86"
 #elif defined(_M_X64) || defined(__x86_64__)
-        << "amd64"
+           << "amd64"
 #elif defined(_M_IA64) || defined(__ia64__)
-        << "itanium"
+           << "itanium"
 #elif defined(__ppc__) || defined(__powerpc__)
-        << "ppc32"
+           << "ppc32"
 #elif defined(__powerpc64__)
-        << "ppc64"
+           << "ppc64"
 #elif defined(__arm__)
-        << "arm"
+           << "arm"
 #else
-        << "<unknown architecture>"
+           << "<unknown architecture>"
 #endif
-        << " "
+           << " "
 #if defined(ASSIMP_BUILD_COMPILER)
-        << ( ASSIMP_BUILD_COMPILER )
+           << (ASSIMP_BUILD_COMPILER)
 #elif defined(_MSC_VER)
-        << "msvc"
+           << "msvc"
 #elif defined(__GNUC__)
-        << "gcc"
+           << "gcc"
+#elif defined(__clang__)
+           << "clang"
+#elif defined(__EMSCRIPTEN__)
+           << "emscripten"
+#elif defined(__MINGW32__)
+           << "MinGW-w64 32bit"
+#elif defined(__MINGW64__)
+           << "MinGW-w64 64bit"
 #else
-        << "<unknown compiler>"
+           << "<unknown compiler>"
 #endif
 
 #ifdef ASSIMP_BUILD_DEBUG
-        << " debug"
+           << " debug"
 #endif
 
-        << (flags & ASSIMP_CFLAGS_NOBOOST ? " noboost" : "")
-        << (flags & ASSIMP_CFLAGS_SHARED  ? " shared" : "")
-        << (flags & ASSIMP_CFLAGS_SINGLETHREADED  ? " singlethreaded" : "");
+           << (flags & ASSIMP_CFLAGS_NOBOOST ? " noboost" : "")
+           << (flags & ASSIMP_CFLAGS_SHARED ? " shared" : "")
+           << (flags & ASSIMP_CFLAGS_SINGLETHREADED ? " singlethreaded" : "")
+           << (flags & ASSIMP_CFLAGS_DOUBLE_SUPPORT ? " double : " : "single : ");
 
-        ASSIMP_LOG_DEBUG(stream.str());
+    ASSIMP_LOG_DEBUG(stream.str());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -593,7 +612,7 @@ const aiScene* Importer::ReadFile( const char* _pFile, unsigned int pFlags) {
             return nullptr;
         }
 
-        std::unique_ptr<Profiler> profiler(GetPropertyInteger(AI_CONFIG_GLOB_MEASURE_TIME,0)?new Profiler():NULL);
+        std::unique_ptr<Profiler> profiler(GetPropertyInteger(AI_CONFIG_GLOB_MEASURE_TIME, 0) ? new Profiler() : nullptr);
         if (profiler) {
             profiler->BeginRegion("total");
         }
@@ -646,7 +665,7 @@ const aiScene* Importer::ReadFile( const char* _pFile, unsigned int pFlags) {
         if ( nullptr != desc ) {
             ext = desc->mName;
         }
-        ASSIMP_LOG_INFO("Found a matching importer for this file format: " + ext + "." );
+        ASSIMP_LOG_INFO("Found a matching importer for this file format: ", ext, "." );
         pimpl->mProgressHandler->UpdateFileRead( 0, fileSize );
 
         if (profiler) {
@@ -700,6 +719,7 @@ const aiScene* Importer::ReadFile( const char* _pFile, unsigned int pFlags) {
         // if failed, extract the error string
         else if( !pimpl->mScene) {
             pimpl->mErrorString = imp->GetErrorText();
+            pimpl->mException = imp->GetException();
         }
 
         // clear any data allocated by post-process steps
@@ -724,7 +744,7 @@ const aiScene* Importer::ReadFile( const char* _pFile, unsigned int pFlags) {
 #endif // ! ASSIMP_CATCH_GLOBAL_EXCEPTIONS
 
     // either successful or failure - the pointer expresses it anyways
-    ASSIMP_END_EXCEPTION_REGION_WITH_ERROR_STRING(const aiScene*, pimpl->mErrorString);
+    ASSIMP_END_EXCEPTION_REGION_WITH_ERROR_STRING(const aiScene*, pimpl->mErrorString, pimpl->mException);
     
     return pimpl->mScene;
 }
@@ -775,7 +795,7 @@ const aiScene* Importer::ApplyPostProcessing(unsigned int pFlags) {
     }
 #endif // ! DEBUG
 
-    std::unique_ptr<Profiler> profiler(GetPropertyInteger(AI_CONFIG_GLOB_MEASURE_TIME,0)?new Profiler():NULL);
+    std::unique_ptr<Profiler> profiler(GetPropertyInteger(AI_CONFIG_GLOB_MEASURE_TIME, 0) ? new Profiler() : nullptr);
     for( unsigned int a = 0; a < pimpl->mPostProcessingSteps.size(); a++)   {
         BaseProcess* process = pimpl->mPostProcessingSteps[a];
         pimpl->mProgressHandler->UpdatePostProcess(static_cast<int>(a), static_cast<int>(pimpl->mPostProcessingSteps.size()) );
@@ -841,7 +861,7 @@ const aiScene* Importer::ApplyCustomizedPostProcessing( BaseProcess *rootProcess
     }
 
     // If no flags are given, return the current scene with no further action
-    if ( NULL == rootProcess ) {
+    if (nullptr == rootProcess) {
         return pimpl->mScene;
     }
 
@@ -873,7 +893,7 @@ const aiScene* Importer::ApplyCustomizedPostProcessing( BaseProcess *rootProcess
     }
 #endif // ! DEBUG
 
-    std::unique_ptr<Profiler> profiler( GetPropertyInteger( AI_CONFIG_GLOB_MEASURE_TIME, 0 ) ? new Profiler() : NULL );
+    std::unique_ptr<Profiler> profiler(GetPropertyInteger(AI_CONFIG_GLOB_MEASURE_TIME, 0) ? new Profiler() : nullptr);
 
     if ( profiler ) {
         profiler->BeginRegion( "postprocess" );
@@ -955,15 +975,14 @@ size_t Importer::GetImporterIndex (const char* szExtension) const {
 
     ASSIMP_BEGIN_EXCEPTION_REGION();
 
-    // skip over wildcard and dot characters at string head --
+    // skip over wild-card and dot characters at string head --
     for ( ; *szExtension == '*' || *szExtension == '.'; ++szExtension );
 
     std::string ext(szExtension);
     if (ext.empty()) {
         return static_cast<size_t>(-1);
     }
-    std::transform( ext.begin(), ext.end(), ext.begin(), ToLower<char> );
-
+    ext = ai_tolower(ext);
     std::set<std::string> str;
     for (std::vector<BaseImporter*>::const_iterator i =  pimpl->mImporter.begin();i != pimpl->mImporter.end();++i)  {
         str.clear();
@@ -1174,7 +1193,7 @@ void Importer::GetMemoryRequirements(aiMemoryInfo& in) const {
 
         // add all bone anims
         for (unsigned int a = 0; a < pc->mNumChannels; ++a) {
-            const aiNodeAnim* pc2 = pc->mChannels[i];
+            const aiNodeAnim* pc2 = pc->mChannels[a];
             in.animations += sizeof(aiNodeAnim);
             in.animations += pc2->mNumPositionKeys * sizeof(aiVectorKey);
             in.animations += pc2->mNumScalingKeys * sizeof(aiVectorKey);
