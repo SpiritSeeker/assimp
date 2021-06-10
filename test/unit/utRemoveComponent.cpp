@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -98,13 +98,6 @@ void RemoveVCProcessTest::SetUp() {
     pScene->mCameras = new aiCamera *[pScene->mNumCameras = 2];
     pScene->mCameras[0] = new aiCamera();
     pScene->mCameras[1] = new aiCamera();
-
-    // COMPILE TEST: aiMaterial may no add any extra members,
-    // so we don't need a virtual destructor
-    char check[sizeof(aiMaterial) == sizeof(aiMaterial) ? 10 : -1];
-    check[0] = 0;
-    // to remove compiler warning
-    EXPECT_EQ(0, check[0]);
 }
 
 // ------------------------------------------------------------------------------------------------

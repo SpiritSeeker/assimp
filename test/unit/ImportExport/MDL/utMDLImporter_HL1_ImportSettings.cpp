@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "AbstractImportExportBase.h"
-#include "MDL/HalfLife/HL1ImportDefinitions.h"
+#include "AssetLib/MDL/HalfLife/HL1ImportDefinitions.h"
 #include "MDLHL1TestFiles.h"
 #include "UnitTestPCH.h"
 #include <assimp/postprocess.h>
