@@ -15,16 +15,20 @@ project "assimp"
     "contrib/poly2tri/**.cc",
     "contrib/unzip/**.c",
     "contrib/zip/src/**.c",
+    "contrib/pugixml/src/**.cpp",
     "contrib/zlib/**.c"
 	}
 
   excludes
   {
-    "code/C4D/**.cpp",
-    "code/Importer/IFC/IFCReaderGen_4.cpp",
-    "code/Importer/StepFile/**.cpp",
+    "code/AssetLib/C4D/**.cpp",
+    "code/Common/Exporter.cpp",
+    "code/AssetLib/IFC/IFCReaderGen_4.cpp",
+    "code/AssetLib/StepFile/**.cpp",
     "contrib/zlib/contrib/testzlib/**.c",
-    "contrib/zlib/contrib/vstudio/**.c"
+    "contrib/zlib/contrib/vstudio/**.c",
+    "code/AssetLib/glTF/*",
+    "code/AssetLib/glTF2/*"
   }
 
 	includedirs
@@ -34,9 +38,15 @@ project "assimp"
     "contrib",
     "contrib/openddlparser/include",
     "contrib/rapidjson/include",
+    "contrib/pugixml/src",
     "contrib/zlib",
 		"include"
 	}
+
+  defines
+  {
+    "ASSIMP_NO_EXPORT"
+  }
 
 	filter "system:linux"
 		buildoptions { "-std=c++11", "-fPIC" }

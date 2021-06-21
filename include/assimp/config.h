@@ -615,6 +615,9 @@ enum aiComponent
 #define AI_CONFIG_IMPORT_FBX_READ_ANIMATIONS \
     "IMPORT_FBX_READ_ANIMATIONS"
 
+#define AI_CONFIG_IMPORT_FBX_READ_WEIGHTS \
+    "IMPORT_FBX_READ_WEIGHTS"
+
 // ---------------------------------------------------------------------------
 /** @brief Set whether the fbx importer will act in strict mode in which only
  *    FBX 2013 is supported and any other sub formats are rejected. FBX 2013
@@ -844,6 +847,9 @@ enum aiComponent
  */
 #define AI_CONFIG_IMPORT_MD3_SKIN_NAME \
     "IMPORT_MD3_SKIN_NAME"
+
+#define AI_CONFIG_IMPORT_MD3_LOAD_SHADERS \
+    "IMPORT_MD3_LOAD_SHADERS"
 
 // ---------------------------------------------------------------------------
 /** @brief  Specify the Quake 3 shader file to be used for a particular
