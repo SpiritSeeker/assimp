@@ -32,6 +32,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <inttypes.h>
 #endif
 
+#define OPENDDL_STATIC_LIBARY
+
 #if defined(_MSC_VER) && !defined(OPENDDL_STATIC_LIBARY)
 
 #define TAG_DLL_EXPORT __declspec(dllexport)

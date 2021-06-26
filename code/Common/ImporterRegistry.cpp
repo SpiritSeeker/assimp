@@ -51,6 +51,8 @@ corresponding preprocessor flag to selectively disable formats.
 #include <cstdlib>
 
 #define ASSIMP_BUILD_NO_C4D_IMPORTER
+#define ASSIMP_NO_EXPORT
+#define ASSIMP_BUILD_NO_GLTF_IMPORTER
 
 // ------------------------------------------------------------------------------------------------
 // Importers
@@ -204,7 +206,7 @@ corresponding preprocessor flag to selectively disable formats.
 #include "AssetLib/M3D/M3DImporter.h"
 #endif
 
-namespace Assimp {
+        namespace Assimp {
 
 // ------------------------------------------------------------------------------------------------
 void GetImporterInstanceList(std::vector<BaseImporter *> &out) {    

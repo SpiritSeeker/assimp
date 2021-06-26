@@ -28,7 +28,8 @@ project "assimp"
     "contrib/zlib/contrib/testzlib/**.c",
     "contrib/zlib/contrib/vstudio/**.c",
     "code/AssetLib/glTF/*",
-    "code/AssetLib/glTF2/*"
+    "code/AssetLib/glTF2/*",
+    "contrib/zlib/contrib/inflate86/*.c"
   }
 
 	includedirs
@@ -45,7 +46,8 @@ project "assimp"
 
   defines
   {
-    "ASSIMP_NO_EXPORT"
+    ASSIMP_NO_EXPORT,
+    ASSIMP_BUILD_NO_GLTF_IMPORTER
   }
 
 	filter "system:linux"
